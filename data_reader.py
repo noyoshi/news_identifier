@@ -15,8 +15,8 @@ class DataReader(object):
             with open(f) as csv_file:
                 reader = csv.DictReader(csv_file)
                 for row in reader:
-                    a, c, d, s, t = self._parse_row(row)
-                    yield Article(t, s, a, d, c)
+                    auth, cont, date, src, title = self._parse_row(row)
+                    yield Article(title, src, auth, date, cont)
 
     def _make_data(self):
         """Parses through files and returns a list of articles"""
@@ -25,8 +25,8 @@ class DataReader(object):
             with open(f) as csv_file:
                 reader = csv.DictReader(csv_file)
                 for row in reader:
-                    a, c, d, s, t = self._parse_row(row)
-                    articles.append(Article(t, s, a, d, c))
+                    auth, cont, date, src, title = self._parse_row(row)
+                    articles.append(Article(title, src, auth, date, cont))
         return articles
 
     def _parse_row(self, row):
@@ -39,4 +39,5 @@ if __name__ == "__main__":
     dr = DataReader(sys.argv[1:])
     for x in dr._make_data():
         print(x)
+        print(x.tokenized_content)
         break

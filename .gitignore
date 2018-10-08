@@ -4,3 +4,4 @@ articles2.csv
 articles3.csv
 backup/
 *.zip
+venv/

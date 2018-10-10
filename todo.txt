@@ -1,0 +1,14 @@
+I have:
+1. Read in the data from the csvs
+2. Scrubbed out the name of thier publishers
+3. Tokenized them (using nltk)
+4. Created class for reading in data, holding data, and organizing the data
+5. Enabled one of the classes (ArticleCollection) to be able to normalize all the articles (so that
+there is an even spread scross all publishers)
+6. Enabled ArticleCollection to split itself into testing, training, and
+developing data.
+
+We need to:
+1. Figure out what metrics we will use
+2. Implement a baseline
+3. Evaluate this baseline

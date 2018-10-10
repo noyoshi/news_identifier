@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+import collections
 import csv
 
-from article import Article
+from tqdm import tqdm
+
+from article import Article, ArticleCollection
 
 class DataReader(object):
     def __init__(self, *args):
@@ -20,13 +23,14 @@ class DataReader(object):
 
     def _make_data(self):
         """Parses through files and returns a list of articles"""
-        articles = []
+        articles = ArticleCollection()
         for f in self.args:
             with open(f) as csv_file:
                 reader = csv.DictReader(csv_file)
-                for row in reader:
+                for row in tqdm(reader):
                     auth, cont, date, src, title = self._parse_row(row)
                     articles.append(Article(title, src, auth, date, cont))
+
         return articles
 
     def _parse_row(self, row):
@@ -34,10 +38,32 @@ class DataReader(object):
         for k in self.KEYS:
             yield row[k]
 
+def hack_csv():
+    """bad stuff happens to the csv library when you try to open large csvs,
+    this applies a quick and dirty fix"""
+    maxInt = sys.maxsize
+    decrement = True
+
+    while decrement:
+        # decrease the maxInt value by factor 10 
+        # as long as the OverflowError occurs.
+
+        decrement = False
+        try:
+            csv.field_size_limit(maxInt)
+        except OverflowError:
+            maxInt = int(maxInt/10)
+            decrement = True
+
 if __name__ == "__main__":
     import sys
+    hack_csv()
     dr = DataReader(sys.argv[1:])
-    for x in dr._make_data():
+    articles = dr._make_data()
+    articles.normalize()
+    print(articles)
+    sys.exit(0)
+    for x in articles:
         print(x)
         print(x.tokenized_content)
         break

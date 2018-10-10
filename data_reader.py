@@ -11,6 +11,7 @@ class DataReader(object):
         """Takes in a list of csv files to parse through"""
         self.args = args[0]
         self.KEYS = ['author', 'content', 'date', 'publication', 'title']
+        self.hack_csv()
 
     def _yield_data(self):
         """In case we can optimize by creating generators, use this"""
@@ -38,32 +39,28 @@ class DataReader(object):
         for k in self.KEYS:
             yield row[k]
 
-def hack_csv():
-    """bad stuff happens to the csv library when you try to open large csvs,
-    this applies a quick and dirty fix"""
-    maxInt = sys.maxsize
-    decrement = True
+    def hack_csv(self):
+        """bad stuff happens to the csv library when you try to open large csvs,
+        this applies a quick and dirty fix"""
+        maxInt = sys.maxsize
+        decrement = True
 
-    while decrement:
-        # decrease the maxInt value by factor 10 
-        # as long as the OverflowError occurs.
-
-        decrement = False
-        try:
-            csv.field_size_limit(maxInt)
-        except OverflowError:
-            maxInt = int(maxInt/10)
-            decrement = True
+        while decrement:
+            # decrease the maxInt value by factor 10
+            # as long as the OverflowError occurs.
+            decrement = False
+            try:
+                csv.field_size_limit(maxInt)
+            except OverflowError:
+                maxInt = int(maxInt/10)
+                decrement = True
 
 if __name__ == "__main__":
     import sys
-    hack_csv()
     dr = DataReader(sys.argv[1:])
     articles = dr._make_data()
     articles.normalize()
+    testing, training = articles.make_sets()
     print(articles)
-    sys.exit(0)
-    for x in articles:
-        print(x)
-        print(x.tokenized_content)
-        break
+    print(testing)
+    print(training)

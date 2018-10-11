@@ -72,8 +72,7 @@ class ArticleCollection(object):
         """Returns new lists that are split into testing(20%), and
         developing(20%). The CURRENT COLLECTION will be used as training data.
         This data will also be stores on the current collection"""
-        self._get_min()
-        testing_size = int(self.min_count * 0.4)
+        testing_size = int(self.size * 0.2)
         developing_size = testing_size
 
         testing = self.make_single_set(testing_size)

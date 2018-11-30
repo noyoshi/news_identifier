@@ -3,6 +3,7 @@
 from data_reader import DataReader
 import sys
 import spacy
+import random
 from spacy.lang.en import English
 parser = English()
 
@@ -61,3 +62,22 @@ if __name__ == "__main__":
         if random.random() > .99:
             print(tokens)
             text_data.append(tokens)
+    from gensim import corpora
+    dictionary = corpora.Dictionary(text_data)
+    corpus = [dictionary.doc2bow(text) for text in text_data]
+    # import pickle
+    # pickle.dump(corpus, open('corpus.pkl', 'wb'))
+    dictionary.save('dictionary.gensim')
+    import gensim
+    NUM_TOPICS = 5
+    ldamodel = gensim.models.ldamodel.LdaModel(corpus, num_topics = NUM_TOPICS, id2word=dictionary, passes=15)
+    ldamodel.save('model5.gensim')
+    topics = ldamodel.print_topics(num_words=6)
+    for topic in topics:
+        print(topic)
+
+    # ldamodel = gensim.models.ldamodel.LdaModel(corpus, num_topics = 10, id2word=dictionary, passes=15)
+    # ldamodel.save('model10.gensim')
+    # topics = ldamodel.print_topics(num_words=4)
+    # for topic in topics:
+    #     print(topic)

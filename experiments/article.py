@@ -16,8 +16,8 @@ class Article(object):
         self.source = source
         self.title = title
 
-        self.tokenized_title = self._tokenize(title)
-        self.tokenized_content = self._tokenize(content)
+        # self.tokenized_title = self._tokenize(title)
+        # self.tokenized_content = self._tokenize(content)
 
 
     def _scrub_names(self, string):

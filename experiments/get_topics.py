@@ -59,9 +59,9 @@ if __name__ == "__main__":
     for a in training: 
         text = a.raw_content # The raw text
         tokens = prepare_text_for_lda(text)
-        if random.random() > .99:
-            print(tokens)
-            text_data.append(tokens)
+        # if random.random() > .99:
+            # print(tokens)
+        text_data.append(tokens)
     from gensim import corpora
     dictionary = corpora.Dictionary(text_data)
     corpus = [dictionary.doc2bow(text) for text in text_data]
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     # pickle.dump(corpus, open('corpus.pkl', 'wb'))
     dictionary.save('dictionary.gensim')
     import gensim
-    NUM_TOPICS = 5
+    NUM_TOPICS = 10
     ldamodel = gensim.models.ldamodel.LdaModel(corpus, num_topics = NUM_TOPICS, id2word=dictionary, passes=15)
     ldamodel.save('model5.gensim')
     topics = ldamodel.print_topics(num_words=6)

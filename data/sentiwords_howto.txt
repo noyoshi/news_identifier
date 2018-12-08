@@ -1,0 +1,26 @@
+# SentiWords v1.1 (14/03/2018)
+# Copyright 2018 Trento RISE and FBK
+# All rights reserved.
+#
+# SentiWords is distributed under the Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) license.
+# http://creativecommons.org/licenses/by-sa/3.0/
+#
+# For any information about SentiWords:
+# https://hlt.fbk.eu/technologies/sentiwords
+#
+# If you use SentiWords, please cite:
+# Gatti L., Guerini M. & Turchi M. "SentiWords: Deriving a High Precision and High Coverage Lexicon for Sentiment Analysis". 
+# IEEE Transactions on Affective Computing 7.4 (2016): 409-421.
+#
+# --------------------------------------------
+#
+# SentiWords is based on SentiWordNet version 3.0.
+# SentiWordNet website: http://sentiwordnet.isti.cnr.it/
+#
+# Each lemma#PoS in this file is associated with the prior polarity value computed from the scores of 
+# all the SentiWordNet senses for that lemma#PoS, following the methodology described in Guerini et al. (2015). 
+# Prior Polarity values are between -1 (very negative) and +1 (very positive).
+#
+# --------------------------------------------
+#
+# lemma#PoS	prior_polarity_score

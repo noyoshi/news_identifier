@@ -5,11 +5,12 @@ import nltk
 import re
 import gc
 import collections
-import matplotlib.pyplot as plt
+import sys
+# import matplotlib.pyplot as plt
 
-from matplotlib.ticker import MultipleLocator
+# from matplotlib.ticker import MultipleLocator
 
-from mlxtend.plotting import plot_confusion_matrix
+# from mlxtend.plotting import plot_confusion_matrix
 
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -31,6 +32,7 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import precision_recall_fscore_support, confusion_matrix
 
+from sentiment import SentimentFeatureBuilder
 ################################################################################
 
 def loadData():
@@ -93,8 +95,11 @@ def crossValidate(document_term_matrix, labels, classifier='SVM', nfold=10):
     else:
         print('error unkown classifier')
         return
-
-    skf = StratifiedKFold(n_splits=2)
+    
+    # Derp this is just seperating stuff into different features and labels for
+    # testing and training
+    # Change this to 80 - 20 
+    # skf = StratifiedKFold(n_splits=1)
     # skf.get_n_splits(labels)
 
     actual = None
@@ -102,24 +107,21 @@ def crossValidate(document_term_matrix, labels, classifier='SVM', nfold=10):
 
 
     labels = np.array(labels)
-    for train_index, test_index in skf.split(document_term_matrix, labels):
-        X_train, X_test = document_term_matrix[train_index], document_term_matrix[test_index]
+    # for train_index, test_index in skf.split(document_term_matrix, labels):
+    print('derp')
+    # TODO SPLIT THIS INTO 2
+    # SETS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+    X_train, X_test = document_term_matrix[train_index], document_term_matrix[test_index]
+    y_train, y_test = labels[train_index], labels[test_index]
+    model = clf.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    actual = y_test
+    guessed = y_pred
 
-        # print(train_index, test_index, labels)
-        y_train, y_test = labels[train_index], labels[test_index]
-        model = clf.fit(X_train, y_train)
-        y_pred = model.predict(X_test)
-        # print(X_test)
-        # print(y_pred)
-        # print(y_test)
-
-        actual = y_test
-        guessed = y_pred
-
-        p, r, f, s = precision_recall_fscore_support(y_test, y_pred, average='weighted')
-        precision.append(p)
-        recall.append(r)
-        fscore.append(f)
+    p, r, f, s = precision_recall_fscore_support(y_test, y_pred, average='weighted')
+    precision.append(p)
+    recall.append(r)
+    fscore.append(f)
 
     guessDict = collections.defaultdict(collections.Counter)
     for g, a in zip(guessed, actual):
@@ -141,6 +143,7 @@ def modelOne(data):
 
     pArticles, pArticlesWords = prep(articles)
 
+    # Garbage collection
     del data
     del articles
     gc.collect()

@@ -11,6 +11,8 @@ from tqdm import tqdm
 
 from article import Article, ArticleCollection
 
+import modelOne
+
 class DataReader(object):
     def __init__(self, *args):
         """Takes in a list of csv files to parse through"""
@@ -70,16 +72,7 @@ def get_cosine_sim(*strings):
     vectors = [t for t in get_vectors(*strings)]
     return cosine_similarity(vectors)
 
-if __name__ == "__main__":
-    import sys
-    dr = DataReader(sys.argv[1:])
-    articles = dr._make_data()
-    articles.normalize()
-    testing, training = articles.make_sets()
-    print(articles)
-    print(testing)
-    print(training)
-
+def baseLine(training, testing):
     sourceStringCombinedDict = collections.defaultdict(str)
     for a in training:
         sourceStringCombinedDict[a.source] += a.raw_content
@@ -102,10 +95,20 @@ if __name__ == "__main__":
 
     print('Correct Guess Percentage: ', (correctGuesses / totalGuesses))
 
+if __name__ == "__main__":
+    import sys
+    dr = DataReader(sys.argv[1:])
+    articles = dr._make_data()
+    articles.normalize()
+    # testing, training = articles.make_sets()
+    # print(articles)
+    # print(testing)
+    # print(training)
 
-    # for source, string in sourceStringCombinedDict.items():
-    #     print(get_vector(string))
-
+    # baseLine(training, testing)
+    print('model one')
+    # modelOne.modelOne(training, testing)
+    modelOne.modelOne(articles)
 
     # sourceWordCountDict = collections.defaultdict(dict)
     # count = 0
@@ -125,4 +128,9 @@ if __name__ == "__main__":
     #         if c > 1:
     #             cleanedWordCountDict[s][w] = c
 
+    # for source, string in sourceStringCombinedDict.items():
+    #     print(get_vector(string))
+
+
     # print(cleanedWordCountDict)
+

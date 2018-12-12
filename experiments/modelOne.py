@@ -6,17 +6,12 @@ import re
 import gc
 import collections
 import sys
-# import matplotlib.pyplot as plt
-
-# from matplotlib.ticker import MultipleLocator
-
-# from mlxtend.plotting import plot_confusion_matrix
+import random
+from tqdm import tqdm
 
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import LinearSVC
 
 from sklearn import tree
@@ -29,9 +24,9 @@ from sklearn.pipeline import make_pipeline
 from sklearn.feature_selection import SelectFromModel
 from sklearn.feature_selection import SelectKBest
 
-from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import precision_recall_fscore_support, confusion_matrix
 
+from scipy.sparse import hstack, coo_matrix
 from sentiment import SentimentFeatureBuilder
 ################################################################################
 
@@ -41,84 +36,64 @@ def loadData():
 def prep(articles):
     nArticles = len(articles)
     cleanArticles = []
-    cleanWords = []
-
     stops = set(stopwords.words('english'))
 
     for i in range(0, nArticles):
         words = articles[i].lower().split()
         words = [w.lower() for w in words if not w in stops]
-        cleanWords.append(words)
         cleanArticles.append(' '.join(words))
-
-    return cleanArticles, cleanWords
-
-def getDTMByTFIDF(articles, nFeatures):
-    tfIdf_vectorizer = TfidfVectorizer(max_features=nFeatures)
-    dtm = tfIdf_vectorizer.fit_transform(articles).toarray()
-    return dtm, tfIdf_vectorizer
+    return cleanArticles
 
 ################################################################################
+# Feature extranction and Document Term Matrix parsing using TFIDF
+
+def getDTMByTFIDF(article_matrix, sentiment_matrix, nFeatures):
+    print(sentiment_matrix.shape)
+    tfIdf_vectorizer = TfidfVectorizer(max_features=nFeatures)
+    # dtm = tfIdf_vectorizer.fit_transform(article_matrix).toarray()
+    dtm = tfIdf_vectorizer.fit_transform(article_matrix).toarray()
+    print(dtm.shape)
+    features = np.hstack([dtm, sentiment_matrix])
+    return features 
 
 def featuresByChiSq(features, labels, nFeature=5000):
     chi2_model = SelectKBest(chi2, k=nFeature)
     dtm = chi2_model.fit_transform(features, labels)
     return dtm, chi2_model
 
-def featuresByInformationGain(features, labels):
-    treeCL = tree.DecisionTreeClassifier(criterion='entropy')
-    treeCL = treeCL.fit(features, labels)
-    transformed_features = SelectFromModel(treeCL, prefit=True).transform(features)
-    return transformed_features
-
-def featuresByLSA(features, ncomponents=100):
-    svd = TruncatedSVD(n_components=ncomponents)
-    normalizer = Normalizer(copy=False)
-    lsa = make_pipeline(svd, normalizer)
-    dtm_lsa = lsa.fit_transform(features)
-    return dtm_lsa
-
 ################################################################################
 
 def crossValidate(document_term_matrix, labels, classifier='SVM', nfold=10):
-    clf = None
-    precision = []
-    recall = []
-    fscore = []
-
-    if classifier is "RF":
-        clf = RandomForestClassifier()
-    elif classifier is "NB":
-        clf = MultinomialNB()
-    elif classifier is "SVM":
-        clf = LinearSVC()
-    else:
-        print('error unkown classifier')
-        return
-    
-    # Derp this is just seperating stuff into different features and labels for
-    # testing and training
-    # Change this to 80 - 20 
-    # skf = StratifiedKFold(n_splits=1)
-    # skf.get_n_splits(labels)
-
-    actual = None
-    guessed = None
-
-
+    precision, recall, fscore = [], [], []
+    x_train, x_test, y_train, y_test = [], [], [], []
+    actual, guessed = None, None
+    clf = LinearSVC()
     labels = np.array(labels)
-    # for train_index, test_index in skf.split(document_term_matrix, labels):
-    print('derp')
-    # TODO SPLIT THIS INTO 2
-    # SETS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-    X_train, X_test = document_term_matrix[train_index], document_term_matrix[test_index]
-    y_train, y_test = labels[train_index], labels[test_index]
-    model = clf.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
-    actual = y_test
-    guessed = y_pred
+    
+    # Create the split between the training and the testing data
+    split_index = int(len(document_term_matrix) * 0.80) 
+    matricies = [(x, i) for i, x in enumerate(document_term_matrix)]
+    random.shuffle(matricies)
 
-    p, r, f, s = precision_recall_fscore_support(y_test, y_pred, average='weighted')
+    x_train_shuf, x_test_shuf = matricies[0:split_index], matricies[split_index:]
+
+    while x_train_shuf:
+        x, i = x_train_shuf.pop(0)
+        y_train.append(labels[i])
+        x_train.append(x)
+
+    while x_test_shuf:
+        x, i = x_test_shuf.pop(0)
+        y_test.append(labels[i])
+        x_test.append(x)
+
+    del x_train_shuf
+    del x_test_shuf
+
+    guessed = clf.fit(x_train, y_train).predict(x_test)
+    actual = y_test
+
+    p, r, f, s = precision_recall_fscore_support(actual, guessed, average='weighted')
     precision.append(p)
     recall.append(r)
     fscore.append(f)
@@ -127,36 +102,30 @@ def crossValidate(document_term_matrix, labels, classifier='SVM', nfold=10):
     for g, a in zip(guessed, actual):
         guessDict[a][g] += 1
 
-    # print(guessDict)
-
-    # return round(np.mean(precision), 3), round(np.mean(recall), 3), round(np.mean(fscore), 3), confusion_matrix(y_test, y_pred)
     return round(np.mean(precision), 3), round(np.mean(recall), 3), round(np.mean(fscore), 3), guessDict
 
 def modelOne(data):
-    articles = []
-    sources = []
-
-    print(len(data))
-    for a in data:
-        articles.append(a.raw_content)
+    article_content, sources = [], []
+    sentiment_matrix = []
+    feature_builder = SentimentFeatureBuilder()
+    for a in tqdm(data):
+        article_content.append(a.raw_content)
         sources.append(a.source)
-
-    pArticles, pArticlesWords = prep(articles)
+        sentiment_matrix.append(feature_builder.get_article_features(a))
+    pArticles = prep(article_content)
 
     # Garbage collection
-    del data
-    del articles
+    del article_content
     gc.collect()
 
-    dtm, vect = getDTMByTFIDF(pArticles, 5000)
-
+    # Applies information gain / TDFID using TFIDF and Chi Squared
+    print("Using tf-idf...")
+    dtm = getDTMByTFIDF(pArticles, np.array(sentiment_matrix), 5000)
+    print("Getting features with ChiSquared ...")
     chisqDtm, chisqModel = featuresByChiSq(dtm, sources, 5000)
-    # chisqDtm, chisqModel = featuresByInformationGain(dtm, sources)
-    # chisqDtm= featuresByLSA(dtm)
-
+    # Runs the SVM to make predictions
+    print("Running the Linear SVM...")
     p, r, f, guessDict = crossValidate(chisqDtm, sources, 'SVM', 10)
-    # p, r, f = crossValidate(chisqDtm, sources, 'RF', 10)
-    # p, r, f = crossValidate(chisqDtm, sources, 'NB', 10)
 
     print('Chi^2 Features:', p, r, f)
 
@@ -167,11 +136,8 @@ def modelOne(data):
     for actual, guessCounts in guessDict.items():
         guessPercentageRow = []
         for source, guessCount in guessCounts.items():
-            # print(guessCount)
             documentCount += guessCount
             guessPercentageDict[actual][source] = float(guessCount) / sum(guessCounts.values())
-
-    # print(guessPercentageDict)
 
     print('Document Count: ', documentCount)
     for source, guesses in guessPercentageDict.items():
@@ -179,15 +145,3 @@ def modelOne(data):
         for guess, percentage in guesses.items():
             print('\tGuess: ', guess, ', Percentage: ', percentage)
 
-
-    # fig, ax = plot_confusion_matrix(conf_mat=guessDict, colorbar=True, show_absolute=False, show_normed=True)
-
-    # ax.xaxis.set_major_locator(MultipleLocator(1))
-    # ax.yaxis.set_major_locator(MultipleLocator(1))
-
-    # print(sources)
-
-    # ax.set_xticklabels([''] + sources)
-    # ax.set_yticklabels([''] + sources)
-
-    # plt.show()

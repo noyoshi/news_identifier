@@ -16,7 +16,7 @@ class Article(object):
         self.source = source
         self.title = title
 
-        # self.tokenized_title = self._tokenize(title)
+        self.tokenized_title = self._tokenize(title)
         # self.tokenized_content = self._tokenize(content)
 
 
@@ -30,6 +30,8 @@ class Article(object):
     def _tokenize(self, string):
         return nltk.word_tokenize(string)
 
+    def get_tokenized_content(self):
+        return nltk.word_tokenize(self.raw_content)
 
     def __str__(self):
         return "Author: {}\nSource: {}\nTitle: {}\nBody: {}".format(

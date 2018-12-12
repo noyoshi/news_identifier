@@ -96,41 +96,7 @@ def baseLine(training, testing):
     print('Correct Guess Percentage: ', (correctGuesses / totalGuesses))
 
 if __name__ == "__main__":
-    import sys
     dr = DataReader(sys.argv[1:])
     articles = dr._make_data()
     articles.normalize()
-    # testing, training = articles.make_sets()
-    # print(articles)
-    # print(testing)
-    # print(training)
-
-    # baseLine(training, testing)
-    print('model one')
-    # modelOne.modelOne(training, testing)
     modelOne.modelOne(articles)
-
-    # sourceWordCountDict = collections.defaultdict(dict)
-    # count = 0
-    # for a in training:
-    #     for w in a._tokenize(a.raw_content):
-    #         if w not in sourceWordCountDict[a.source].keys():
-    #             sourceWordCountDict[a.source][w] = 1
-    #         else:
-    #             sourceWordCountDict[a.source][w] += 1
-
-    #     if count > 4:
-    #         break
-
-    # cleanedWordCountDict = collections.defaultdict(dict)
-    # for s in sourceWordCountDict.keys():
-    #     for w, c in sourceWordCountDict[s].items():
-    #         if c > 1:
-    #             cleanedWordCountDict[s][w] = c
-
-    # for source, string in sourceStringCombinedDict.items():
-    #     print(get_vector(string))
-
-
-    # print(cleanedWordCountDict)
-

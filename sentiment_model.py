@@ -75,18 +75,10 @@ for s in SOURCES:
         else:
             d.append(0)
     array.append(list(d))
-# array = [[13,1,1,0,2,0],
-#      [3,9,6,0,1,0],
-#      [0,0,16,2,0,0],
-#      [0,0,0,13,0,0],
-#      [0,0,0,0,15,0],
-#      [0,0,1,0,0,15]]
 df_cm = pd.DataFrame(array, SOURCES, SOURCES)
-#plt.figure(figsize = (10,7))
 plt.figure(figsize = (20,20))
-sn.set(font_scale=1.4)#for label size
-x = sn.heatmap(df_cm, annot=True,annot_kws={"size": 20})# font size
+sn.set(font_scale=1.4)
+x = sn.heatmap(df_cm, annot=True,annot_kws={"size": 20})
 fig = x.get_figure()
 fig.savefig('sentiment_heatmap')
 
-# print(guesses)

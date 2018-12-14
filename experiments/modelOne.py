@@ -101,8 +101,34 @@ def crossValidate(document_term_matrix, labels, classifier='SVM', nfold=10):
     guessDict = collections.defaultdict(collections.Counter)
     for g, a in zip(guessed, actual):
         guessDict[a][g] += 1
+    
+    make_matrix(guessDict)
 
     return round(np.mean(precision), 3), round(np.mean(recall), 3), round(np.mean(fscore), 3), guessDict
+
+def make_matrix(guesses):
+    import seaborn as sn
+    import matplotlib.pyplot as plt
+    SOURCES = ["Vox", "CNN", "Talking Points Memo", "Buzzfeed News", "Washington Post",
+        "Guardian", "Atlantic", "Business Insider", "New York Times",
+        "NPR", "Reuters", "New York Post", "Fox News", "National Review", "Breitbart"]
+
+    array = []
+    for s in SOURCES:
+        d = []
+        tot = sum(guesses[s].values())
+        for other_s in SOURCES:
+            if tot != 0:
+                d.append(round(guesses[s][other_s]/tot, 2))
+            else:
+                d.append(0)
+        array.append(list(d))
+    df_cm = pd.DataFrame(array, SOURCES, SOURCES)
+    plt.figure(figsize = (16,16))
+    sn.set(font_scale=1.4) #for label size
+    x = sn.heatmap(df_cm, annot=True,annot_kws={"size": 20})# font size
+    fig = x.get_figure()
+    fig.savefig('ML_Sentiment_heatmap')
 
 def modelOne(data):
     article_content, sources = [], []

@@ -101,7 +101,7 @@ if __name__ == "__main__":
         print('Correct Guess Percentage at', totalGuesses, ' articles studied: ', (correctGuesses / totalGuesses))
 
     print('Correct Guess Percentage: ', (correctGuesses / totalGuesses))
-
+    
 
     # for source, string in sourceStringCombinedDict.items():
     #     print(get_vector(string))
